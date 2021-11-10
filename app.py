@@ -19,6 +19,8 @@ app.add_middleware(
 )
 app.add_middleware(GZipMiddleware)
 
+app.task_to_ws = dict()
+
 app.include_router(schedulers.router, prefix="/api/scheduler")
 app.include_router(tasks.router, prefix="/api/task")
 app.include_router(users.router, prefix="/api/user")

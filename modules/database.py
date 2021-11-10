@@ -2,6 +2,7 @@ import sqlite3
 from time import time_ns
 
 import orjson
+from fastapi import Request
 from routers import schedulers, tasks, users
 
 from . import environment
@@ -52,8 +53,9 @@ def pending_task(task_id, pc):
     update_row(environment.DB_TABLE_TASKS, "status", 2, "task_id", task_id)
     update_row(environment.DB_TABLE_TASKS, "pc", pc, "task_id", task_id)
 
-def change_scheduler_status(pc: str, status: int):
+def change_scheduler_status(pc: str, status: int, request: Request):
     update_row(environment.DB_TABLE_SCHEDULER, "status", status, "pc", pc)
+    request.app.task_to_ws[pc].send_text(orjson.dumps(status_scheduler(pc).dict()).decode("utf-8"))
 
 # STATUS/INFO
 def list_task(identifier = ""):
