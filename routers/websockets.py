@@ -13,25 +13,26 @@ async def websocket_endpoint(websocket: WebSocket):
     pc = await websocket.receive_text()
     init_data = database.status_scheduler(pc).dict()
     await websocket.send_text(jsondumps(init_data).decode("utf-8"))
-    while (act_data:=database.status_scheduler(pc).dict()) == init_data:
-        await sleep(1.5)
-    await websocket.send_text(jsondumps(act_data).decode("utf-8"))
+    while True:
+        if (act_data:=database.status_scheduler(pc).dict()) == init_data:
+            await sleep(1.5)
+        else:
+            init_data = act_data
+            await websocket.send_text(jsondumps(act_data).decode("utf-8"))
+            await sleep(1.5)
 
 @router.get("/test")
 async def get():
-    return HTMLResponse(f"""
-                        <body>
-                        </body>
-                        <script>
-                            var ws = new WebSocket("{environment.WS_URL}");
-                            ws.onmessage = function(event) {{
-                                console.log(JSON.parse(event.data))
-                                document.body.innerHTML = JSON.parse(event.data)["pc"] + "|" + JSON.parse(event.data)["status"]
-                            }};
-                            ws.onopen = () => ws.send("eeklo");
-                            window.onbeforeunload = function() {{
-                                ws.onclose = function () {{}};
-                                ws.close();
-                            }};
-                        </script>
-                        """)
+    return HTMLResponse(f"""<body>
+</body>
+<script>
+    var ws = new WebSocket("{environment.WS_URL}");
+    ws.onmessage = function(event) {{
+        document.body.innerHTML = JSON.parse(event.data)["pc"] + "|" + JSON.parse(event.data)["status"]
+    }};
+    ws.onopen = () => ws.send("eeklo");
+    window.onbeforeunload = function() {{
+        ws.onclose = function () {{}};
+        ws.close();
+    }};
+</script>""")
