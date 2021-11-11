@@ -1,14 +1,20 @@
-from fastapi import APIRouter, Request, WebSocket
+from asyncio import Event
+
+from fastapi import APIRouter, WebSocket
 from fastapi.responses import HTMLResponse
-from modules import environment
+from modules import database, environment
+from uhu.lol import task_to_ws, lol
 
 router = APIRouter()
 
 @router.websocket("")
-async def websocket_endpoint(websocket: WebSocket, request: Request):
+async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     pc = await websocket.receive_text()
-    request.app.task_to_ws[pc] = websocket
+    task_to_ws[pc] = websocket
+    await lol(task_to_ws, pc)
+    while True:
+        await Event().wait()
 
 @router.get("/test")
 async def get():
