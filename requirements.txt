@@ -5,6 +5,5 @@ httptools==0.3.0
 numpy==1.21.2
 orjson==3.6.4
 pyjwt==1.7.1
-requests==2.22.0
 uvicorn==0.15.0
 websockets==10.0

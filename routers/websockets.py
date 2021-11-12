@@ -1,18 +1,23 @@
-from asyncio import Event
+from asyncio import Event, gather
 
 from fastapi import APIRouter, WebSocket
 from fastapi.responses import HTMLResponse
 from modules import database, environment
-from uhu.lol import task_to_ws, lol
+from orjson import dumps
 
 router = APIRouter()
+
+task_to_ws = dict()
+async def sendMessageToPC(pc):
+    await gather(*[client.send_text(dumps(database.status_scheduler(pc).dict()).decode("utf-8")) for client in task_to_ws[pc]])
 
 @router.websocket("")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     pc = await websocket.receive_text()
-    task_to_ws[pc] = websocket
-    await lol(task_to_ws, pc)
+    task_to_ws.setdefault(pc, set())
+    task_to_ws[pc].add(websocket)
+    await websocket.send_text(dumps(database.status_scheduler(pc).dict()).decode("utf-8"))
     while True:
         await Event().wait()
 

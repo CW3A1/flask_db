@@ -1,7 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-from requests import get
 
 from routers import schedulers, tasks, users, websockets
 
@@ -24,8 +23,3 @@ app.include_router(schedulers.router, prefix="/api/scheduler")
 app.include_router(tasks.router, prefix="/api/task")
 app.include_router(users.router, prefix="/api/user")
 app.include_router(websockets.router, prefix="/ws")
-
-@app.get("/test")
-async def test():
-    resp = get("https://pno3cwa2.student.cs.kuleuven.be/api/scheduler/status?pc=eeklo").json()
-    return resp

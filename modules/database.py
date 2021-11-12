@@ -2,8 +2,8 @@ import sqlite3
 from time import time_ns
 
 import orjson
-from routers import schedulers, tasks, users
-from uhu.lol import task_to_ws, lol
+from routers import schedulers, tasks
+from routers.websockets import sendMessageToPC
 
 from . import environment
 
@@ -55,7 +55,7 @@ def pending_task(task_id, pc):
 
 async def change_scheduler_status(pc: str, status: int):
     update_row(environment.DB_TABLE_SCHEDULER, "status", status, "pc", pc)
-    await lol(task_to_ws, pc)
+    await sendMessageToPC(pc)
 
 # STATUS/INFO
 def list_task(identifier = ""):
