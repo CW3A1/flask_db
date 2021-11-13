@@ -1,12 +1,14 @@
 import sqlite3
 from time import time_ns
 
-import orjson
+from orjson import dumps, loads
 from routers import schedulers, tasks
 from routers.websockets import sendMessageToPC
 
 from . import environment
 
+def udumps(data):
+    return dumps(data).decode("utf-8")
 
 def connect_to_db(file = environment.DB_FILE):
     connection = sqlite3.connect(file)
@@ -26,7 +28,7 @@ def select_all_column(column, table):
 
 def update_row(table, column, new_value, s_column, s_value):
     connection, cursor = connect_to_db()
-    cursor.execute(f"UPDATE {table} SET {column} = '{new_value}' WHERE {s_column} = '{s_value}';")
+    cursor.execute(f"""UPDATE {table} SET {column} = ? WHERE {s_column} = "{s_value}";""", (new_value, ))
     connection.commit()
     close_connection(connection, cursor)
 
@@ -39,7 +41,7 @@ def get_table(table):
 
 def get_row(table, s_column, s_value):
     connection, cursor = connect_to_db()
-    cursor.execute(f"SELECT * FROM {table} WHERE {s_column} = '{s_value}';")
+    cursor.execute(f"""SELECT * FROM {table} WHERE {s_column} = "{s_value}";""")
     results = cursor.fetchall()
     close_connection(connection, cursor)
     return results[0] if results else []
@@ -47,7 +49,7 @@ def get_row(table, s_column, s_value):
 # UPDATE ROWS
 def complete_task(task_id, res):
     update_row(environment.DB_TABLE_TASKS, "status", 1, "task_id", task_id)
-    update_row(environment.DB_TABLE_TASKS, "result", res, "task_id", task_id)
+    update_row(environment.DB_TABLE_TASKS, "result", udumps(res), "task_id", task_id)
 
 def pending_task(task_id, pc):
     update_row(environment.DB_TABLE_TASKS, "status", 2, "task_id", task_id)
@@ -55,20 +57,21 @@ def pending_task(task_id, pc):
 
 async def change_scheduler_status(pc: str, status: int):
     update_row(environment.DB_TABLE_SCHEDULER, "status", status, "pc", pc)
-    await sendMessageToPC(pc)
+    try: await sendMessageToPC(pc)
+    except: pass
 
 # STATUS/INFO
 def list_task(identifier = ""):
     connection, cursor = connect_to_db()
-    cursor.execute(f"SELECT * FROM {environment.DB_TABLE_TASKS} WHERE uuid = '{identifier}';")
+    cursor.execute(f"""SELECT * FROM {environment.DB_TABLE_TASKS} WHERE uuid = "{identifier}";""")
     results = cursor.fetchall()
     close_connection(connection, cursor)
     return tasks.TaskList(tasks=[tasks.TaskOutput(task_id=result[0],
                                         status=result[1],
                                         unix_time= result[2],
                                         pc=result[3],
-                                        input_values=orjson.loads(result[4]),
-                                        result=orjson.loads(result[5]) if result[5] else [],
+                                        input_values=loads(result[4]),
+                                        result=loads(result[5]) if result[5] else [],
                                         uuid=result[6]).dict() for result in results],
                                 uuid=identifier)
 
@@ -78,8 +81,8 @@ def status_task(task_id):
                             status=result[1],
                             unix_time= result[2],
                             pc=result[3],
-                            input_values=orjson.loads(result[4]),
-                            result=orjson.loads(result[5]) if result[5] else [],
+                            input_values=loads(result[4]),
+                            result=loads(result[5]) if result[5] else [],
                             uuid=result[6]).dict()
 
 def task_exists(task_id):
@@ -100,7 +103,7 @@ def scheduler_exists(pc):
 
 def user_info(s_column, s_value):
     result = get_row(environment.DB_TABLE_USERS, s_column, s_value)
-    return {'uuid': result[0]}
+    return {"uuid": result[0]}
 
 def user_hash(identifier):
     result = get_row(environment.DB_TABLE_USERS, "uuid", identifier)
@@ -113,13 +116,13 @@ def user_exists(identifier):
 # ADD ROWS
 def add_task(task_id, input_values, identifier = ""):
     connection, cursor = connect_to_db()
-    cursor.execute(f"INSERT INTO {environment.DB_TABLE_TASKS} (task_id, unix_time, input_values, uuid) VALUES ('{task_id}', {time_ns()}, '{input_values}', '{identifier}');")
+    cursor.execute(f"INSERT INTO {environment.DB_TABLE_TASKS} (task_id, unix_time, input_values, uuid) VALUES (?, ?, ?, ?);", (task_id, time_ns(), udumps(input_values), identifier))
     connection.commit()
     close_connection(connection, cursor)
 
 def add_user(identifier, hashed_password):
     connection, cursor = connect_to_db()
-    cursor.execute(f"INSERT INTO {environment.DB_TABLE_USERS} VALUES ('{identifier}', '{hashed_password}');")
+    cursor.execute(f"INSERT INTO {environment.DB_TABLE_USERS} VALUES (?, ?);", (identifier, hashed_password, ))
     connection.commit()
     close_connection(connection, cursor)
 
