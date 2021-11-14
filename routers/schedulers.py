@@ -7,6 +7,7 @@ router = APIRouter()
 class SchedulerInfo(BaseModel):
     pc: str
     status: int = 0
+    pc_domain: str
 
 @router.put("/status", response_model=SchedulerInfo, tags=["schedulers"])
 async def change_scheduler_status(new_info: SchedulerInfo, auth: str):

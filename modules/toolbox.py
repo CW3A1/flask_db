@@ -1,11 +1,12 @@
 import requests
 
-from modules import database, environment
+from modules import database
 
 
 async def task(pc, task_id):
-    input_values = database.status_task(task_id)["input_values"]
-    res = requests.post(environment.WORKER_URL + "/num_math/differentiation", timeout=3, json=input_values).json()
+    status_task = database.status_task(task_id)
+    status_scheduler = database.status_scheduler(pc)
+    res = requests.post(status_scheduler["pc_domain"] + "/num_math/differentiation", timeout=3, json=status_task["input_values"]).json()
     database.complete_task(task_id, res)
     database.change_scheduler_status(pc, 0)
 

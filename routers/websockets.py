@@ -9,7 +9,7 @@ router = APIRouter()
 
 task_to_ws = dict()
 async def sendMessageToPC(pc):
-    await gather(*[client.send_text(dumps(database.status_scheduler(pc).dict()).decode("utf-8")) for client in task_to_ws[pc]])
+    await gather(*[client.send_text(dumps(database.status_scheduler(pc)).decode("utf-8")) for client in task_to_ws[pc]])
 
 @router.websocket("")
 async def websocket_endpoint(websocket: WebSocket):
@@ -17,7 +17,7 @@ async def websocket_endpoint(websocket: WebSocket):
     pc = await websocket.receive_text()
     task_to_ws.setdefault(pc, set())
     task_to_ws[pc].add(websocket)
-    await websocket.send_text(dumps(database.status_scheduler(pc).dict()).decode("utf-8"))
+    await websocket.send_text(dumps(database.status_scheduler(pc)).decode("utf-8"))
     while True:
         await Event().wait()
 

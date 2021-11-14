@@ -89,13 +89,11 @@ def task_exists(task_id):
     result = get_row(environment.DB_TABLE_TASKS, "task_id", task_id)
     return True if result else False
 
-def list_scheduler():
-    result = get_table(environment.DB_TABLE_SCHEDULER)
-    return {r[0]:r[1] for r in result}
-
 def status_scheduler(pc):
     result = get_row(environment.DB_TABLE_SCHEDULER, "pc", pc)
-    return schedulers.SchedulerInfo(pc=result[0], status=result[1])
+    return schedulers.SchedulerInfo(pc=result[0],
+                                    status=result[1],
+                                    pc_domain=result[2]).dict()
 
 def scheduler_exists(pc):
     result = get_row(environment.DB_TABLE_SCHEDULER, "pc", pc)
