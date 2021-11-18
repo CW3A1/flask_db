@@ -3,7 +3,6 @@ from time import time_ns
 
 from orjson import dumps, loads
 from routers import schedulers, tasks
-from routers.websockets import sendMessageToPC
 
 from . import environment
 
@@ -55,10 +54,8 @@ def pending_task(task_id, pc):
     update_row(environment.DB_TABLE_TASKS, "status", 2, "task_id", task_id)
     update_row(environment.DB_TABLE_TASKS, "pc", pc, "task_id", task_id)
 
-async def change_scheduler_status(pc: str, status: int):
+def change_scheduler_status(pc: str, status: int):
     update_row(environment.DB_TABLE_SCHEDULER, "status", status, "pc", pc)
-    try: await sendMessageToPC(pc)
-    except: pass
 
 # STATUS/INFO
 def list_task(identifier = ""):

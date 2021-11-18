@@ -27,5 +27,5 @@ async def next_task():
     oldestPendingTask = database.oldest_pending_task()
     if randomFreeScheduler and oldestPendingTask:
         database.pending_task(oldestPendingTask, randomFreeScheduler)
-        await database.change_scheduler_status(randomFreeScheduler, 1)
+        database.change_scheduler_status(randomFreeScheduler, 1)
         await task(randomFreeScheduler, oldestPendingTask)
