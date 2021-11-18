@@ -6,7 +6,19 @@ from modules import database
 async def task(pc, task_id):
     status_task = database.status_task(task_id)
     status_scheduler = database.status_scheduler(pc)
-    res = requests.post(status_scheduler["pc_domain"] + "/num_math/differentiation", timeout=3, json=status_task["input_values"]).json()
+    operation = status_task["input_values"]["operation"]
+    if operation == "int":
+        res = requests.post(status_scheduler["pc_domain"] + "/num_math/integration", timeout=3, json=status_task["input_values"]).json()
+    if operation == "diff":
+        res = requests.post(status_scheduler["pc_domain"] + "/num_math/differentiation", timeout=3, json=status_task["input_values"]).json()
+    if operation == "opt":
+        res = requests.post(status_scheduler["pc_domain"] + "/num_math/optimization", timeout=3, json=status_task["input_values"]).json()
+    if operation == "lint":
+        res = requests.post(status_scheduler["pc_domain"] + "/num_math/lagrange_interpolation", timeout=3, json=status_task["input_values"]).json()
+    if operation == "taprox":
+        res = requests.post(status_scheduler["pc_domain"] + "/num_math/taylor_approximation", timeout=3, json=status_task["input_values"]).json()
+    if operation == "heateq":
+        res = requests.post(status_scheduler["pc_domain"] + "/num_math/heat_equation", timeout=3, json=status_task["input_values"]).json()
     database.complete_task(task_id, res)
     database.change_scheduler_status(pc, 0)
 
