@@ -4,6 +4,7 @@ from typing import Dict, List
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from modules import auth, database, toolbox
 from pydantic import BaseModel
+from requests import post
 
 router = APIRouter()
 
@@ -25,6 +26,10 @@ class TaskList(BaseModel):
     tasks: List[TaskOutput]
     uuid: str
 
+class CompleteTask(BaseModel):
+    task_id: str
+    data: Dict
+
 @router.post("/add", response_model=TaskOutput, tags=["tasks"])
 async def add_task(task_data: TaskInput, background: BackgroundTasks, identifier: str = Depends(auth.header_to_identifier)):
     task_id = str(uuid.uuid4())[:8]
@@ -40,3 +45,9 @@ async def view_task_status(task_id: str, identifier: str = Depends(auth.header_t
             return resp
         raise HTTPException(status_code=403)
     raise HTTPException(status_code=404)
+
+@router.post("/complete", tags=["tasks"])
+async def complete_task(res: CompleteTask):
+    pc = database.status_task(res.task_id)["pc"]
+    database.complete_task(res.task_id, res.data)
+    database.change_scheduler_status(pc, 0)
