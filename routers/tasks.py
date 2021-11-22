@@ -1,7 +1,8 @@
 import uuid
+from asyncio import ensure_future
 from typing import Dict, List
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from modules import auth, database, toolbox
 from pydantic import BaseModel
 
@@ -32,10 +33,10 @@ class CompleteTask(BaseModel):
     data: Dict
 
 @router.post("/add", response_model=TaskOutput, tags=["tasks"])
-async def add_task(task_data: TaskInput, background: BackgroundTasks, identifier: str = Depends(auth.header_to_identifier)):
+async def add_task(task_data: TaskInput, identifier: str = Depends(auth.header_to_identifier)):
     task_id = str(uuid.uuid4())[:8]
     database.add_task(task_id, task_data.dict(), identifier)
-    background.add_task(toolbox.next_task)
+    ensure_future(toolbox.next_task())
     return database.status_task(task_id)
 
 @router.get("/status", response_model=TaskOutput, tags=["tasks"])
@@ -52,3 +53,5 @@ async def complete_task(res: CompleteTask):
     database.complete_task(res.task_id, res.data)
     database.change_scheduler_status(database.status_task(res.task_id)["pc"], 0)
     await broadcastMessage(res.task_id)
+    resp = database.status_task(res.task_id)
+    return resp
