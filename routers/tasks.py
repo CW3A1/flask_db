@@ -4,7 +4,8 @@ from typing import Dict, List
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from modules import auth, database, toolbox
 from pydantic import BaseModel
-from requests import post
+
+from routers.websockets import broadcastMessage
 
 router = APIRouter()
 
@@ -48,6 +49,6 @@ async def view_task_status(task_id: str, identifier: str = Depends(auth.header_t
 
 @router.post("/complete", tags=["tasks"])
 async def complete_task(res: CompleteTask):
-    pc = database.status_task(res.task_id)["pc"]
     database.complete_task(res.task_id, res.data)
-    database.change_scheduler_status(pc, 0)
+    database.change_scheduler_status(database.status_task(res.task_id)["pc"], 0)
+    await broadcastMessage(res.task_id)
