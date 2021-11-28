@@ -2,9 +2,10 @@ import sqlite3
 from time import time_ns
 
 from orjson import dumps, loads
-from routers import schedulers, tasks
 
-from . import environment
+from modules import environment
+from modules.classes import SchedulerInfo, TaskList, TaskOutput
+
 
 def udumps(data):
     return dumps(data).decode("utf-8")
@@ -63,7 +64,7 @@ def list_task(identifier = ""):
     cursor.execute(f"""SELECT * FROM {environment.DB_TABLE_TASKS} WHERE uuid = "{identifier}";""")
     results = cursor.fetchall()
     close_connection(connection, cursor)
-    return tasks.TaskList(tasks=[tasks.TaskOutput(task_id=result[0],
+    return TaskList(tasks=[TaskOutput(task_id=result[0],
                                         status=result[1],
                                         unix_time= result[2],
                                         pc=result[3],
@@ -74,7 +75,7 @@ def list_task(identifier = ""):
 
 def status_task(task_id):
     result = get_row(environment.DB_TABLE_TASKS, "task_id", task_id)
-    return tasks.TaskOutput(task_id=result[0],
+    return TaskOutput(task_id=result[0],
                             status=result[1],
                             unix_time= result[2],
                             pc=result[3],
@@ -88,7 +89,7 @@ def task_exists(task_id):
 
 def status_scheduler(pc):
     result = get_row(environment.DB_TABLE_SCHEDULER, "pc", pc)
-    return schedulers.SchedulerInfo(pc=result[0],
+    return SchedulerInfo(pc=result[0],
                                     status=result[1],
                                     pc_domain=result[2]).dict()
 
