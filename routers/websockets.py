@@ -7,7 +7,7 @@ router = APIRouter()
 
 task_to_ws = dict()
 async def broadcastMessage(task_id):
-    if "task_id" in task_to_ws:
+    if task_id in task_to_ws:
         await gather(*[client.send_text(udumps(status_task(task_id))) for client in task_to_ws[task_id]])
 
 @router.websocket("")
