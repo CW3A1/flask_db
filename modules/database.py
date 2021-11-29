@@ -55,6 +55,10 @@ def pending_task(task_id, pc):
     update_row(environment.DB_TABLE_TASKS, "status", 2, "task_id", task_id)
     update_row(environment.DB_TABLE_TASKS, "pc", pc, "task_id", task_id)
 
+def free_task(task_id):
+    update_row(environment.DB_TABLE_TASKS, "status", 0, "task_id", task_id)
+    update_row(environment.DB_TABLE_TASKS, "pc", "", "task_id", task_id)
+
 def change_scheduler_status(pc: str, status: int):
     update_row(environment.DB_TABLE_SCHEDULER, "status", status, "pc", pc)
 

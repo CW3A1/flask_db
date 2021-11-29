@@ -1,8 +1,11 @@
+from asyncio import ensure_future
+
 from requests import post
 
-from modules.database import (change_scheduler_status, oldest_pending_task,
-                              pending_task, random_free_scheduler,
-                              status_scheduler, status_task)
+from modules.database import (change_scheduler_status, free_task,
+                              oldest_pending_task, pending_task,
+                              random_free_scheduler, status_scheduler,
+                              status_task)
 
 operation_paths = {
     "int": "/num_math/integration",
@@ -17,7 +20,12 @@ async def task(pc, task_id):
     status_task_, status_scheduler_ = status_task(task_id), status_scheduler(pc)
     operation, options = status_task_["input_values"]["operation"], status_task_["input_values"]["options"]
     options["task_id"] = status_task_["task_id"]
-    post(status_scheduler_["pc_domain"] + operation_paths[operation], json=options)
+    try:
+        post(status_scheduler_["pc_domain"] + operation_paths[operation], json=options)
+    except:
+        free_task(task_id)
+        change_scheduler_status(pc, 2)
+        ensure_future(next_task())
 
 async def next_task():
     randomFreeScheduler, oldestPendingTask = random_free_scheduler(), oldest_pending_task()
