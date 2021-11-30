@@ -39,3 +39,11 @@ class User(BaseModel):
 class UserToken(BaseModel):
     uuid: str
     jwt: str
+
+# Logs
+class LogInfo(BaseModel):
+    unix_time: int
+    text: str
+
+class LogList(BaseModel):
+    logs: List[LogInfo]

@@ -4,7 +4,8 @@ from time import time_ns
 from orjson import dumps, loads
 
 from modules import environment
-from modules.classes import SchedulerInfo, TaskList, TaskOutput
+from modules.classes import (LogInfo, LogList, SchedulerInfo, TaskList,
+                             TaskOutput)
 
 
 def udumps(data):
@@ -113,6 +114,13 @@ def user_exists(identifier):
     result = get_row(environment.DB_TABLE_USERS, "uuid", identifier)
     return True if result else False
 
+def list_logs(max_logs):
+    connection, cursor = connect_to_db()
+    cursor.execute(f"""SELECT * FROM {environment.DB_TABLE_LOGS} ORDER BY logid DESC LIMIT {max_logs};""")
+    results = cursor.fetchall()
+    close_connection(connection, cursor)
+    return LogList(logs=[LogInfo(unix_time=result[0], text=result[1]) for result in results])
+
 # ADD ROWS
 def add_task(task_id, input_values, identifier = ""):
     connection, cursor = connect_to_db()
@@ -123,6 +131,12 @@ def add_task(task_id, input_values, identifier = ""):
 def add_user(identifier, hashed_password):
     connection, cursor = connect_to_db()
     cursor.execute(f"INSERT INTO {environment.DB_TABLE_USERS} VALUES (?, ?);", (identifier, hashed_password, ))
+    connection.commit()
+    close_connection(connection, cursor)
+
+def add_log(unix_time, text):
+    connection, cursor = connect_to_db()
+    cursor.execute(f"INSERT INTO {environment.DB_TABLE_LOGS} VALUES (?, ?);", (unix_time, text, ))
     connection.commit()
     close_connection(connection, cursor)
 
