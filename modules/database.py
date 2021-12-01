@@ -49,19 +49,35 @@ def get_row(table, s_column, s_value):
 
 # UPDATE ROWS
 def complete_task(task_id, res):
-    update_row(environment.DB_TABLE_TASKS, "status", 1, "task_id", task_id)
-    update_row(environment.DB_TABLE_TASKS, "result", udumps(res), "task_id", task_id)
+    try:
+        update_row(environment.DB_TABLE_TASKS, "status", 1, "task_id", task_id)
+        update_row(environment.DB_TABLE_TASKS, "result", udumps(res), "task_id", task_id)
+        add_log(time_ns(), f"Updated task {task_id} status to 1")
+    except:
+        add_log(time_ns(), f"Failed to update task {task_id} status to 1")
 
 def pending_task(task_id, pc):
-    update_row(environment.DB_TABLE_TASKS, "status", 2, "task_id", task_id)
-    update_row(environment.DB_TABLE_TASKS, "pc", pc, "task_id", task_id)
+    try:
+        update_row(environment.DB_TABLE_TASKS, "status", 2, "task_id", task_id)
+        update_row(environment.DB_TABLE_TASKS, "pc", pc, "task_id", task_id)
+        add_log(time_ns(), f"Updated task {task_id} status to 2")
+    except:
+        add_log(time_ns(), f"Failed to update task {task_id} status to 1")
 
 def free_task(task_id):
-    update_row(environment.DB_TABLE_TASKS, "status", 0, "task_id", task_id)
-    update_row(environment.DB_TABLE_TASKS, "pc", "", "task_id", task_id)
+    try:
+        update_row(environment.DB_TABLE_TASKS, "status", 0, "task_id", task_id)
+        update_row(environment.DB_TABLE_TASKS, "pc", "", "task_id", task_id)
+        add_log(time_ns(), f"Updated task {task_id} status to 0")
+    except:
+        add_log(time_ns(), f"Failed to update task {task_id} status to 1")
 
 def change_scheduler_status(pc: str, status: int):
-    update_row(environment.DB_TABLE_SCHEDULER, "status", status, "pc", pc)
+    try:
+        update_row(environment.DB_TABLE_SCHEDULER, "status", status, "pc", pc)
+        add_log(time_ns(), f"Updated {pc} status to {status}")
+    except:
+        add_log(time_ns(), f"Failed to update {pc} status to {status}")
 
 # STATUS/INFO
 def list_task(identifier = ""):
@@ -123,16 +139,24 @@ def list_logs(max_logs):
 
 # ADD ROWS
 def add_task(task_id, input_values, identifier = ""):
-    connection, cursor = connect_to_db()
-    cursor.execute(f"INSERT INTO {environment.DB_TABLE_TASKS} (task_id, unix_time, input_values, uuid) VALUES (?, ?, ?, ?);", (task_id, time_ns(), udumps(input_values), identifier))
-    connection.commit()
-    close_connection(connection, cursor)
+    try:
+        connection, cursor = connect_to_db()
+        cursor.execute(f"INSERT INTO {environment.DB_TABLE_TASKS} (task_id, unix_time, input_values, uuid) VALUES (?, ?, ?, ?);", (task_id, time_ns(), udumps(input_values), identifier))
+        connection.commit()
+        close_connection(connection, cursor)
+        add_log(time_ns(), f"Added new task {task_id} to the database")
+    except:
+        add_log(time_ns(), f"Failed to add new task {task_id} to the database")
 
 def add_user(identifier, hashed_password):
-    connection, cursor = connect_to_db()
-    cursor.execute(f"INSERT INTO {environment.DB_TABLE_USERS} VALUES (?, ?);", (identifier, hashed_password, ))
-    connection.commit()
-    close_connection(connection, cursor)
+    try:
+        connection, cursor = connect_to_db()
+        cursor.execute(f"INSERT INTO {environment.DB_TABLE_USERS} VALUES (?, ?);", (identifier, hashed_password, ))
+        connection.commit()
+        close_connection(connection, cursor)
+        add_log(time_ns(), f"Added new user {identifier} to the database")
+    except:
+        add_log(time_ns(), f"Failed to add new user {identifier} to the database")
 
 def add_log(unix_time, text):
     connection, cursor = connect_to_db()
