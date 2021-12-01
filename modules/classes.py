@@ -17,7 +17,8 @@ class TaskInput(BaseModel):
 
 class TaskOutput(BaseModel):
     task_id: str
-    status: str = 0
+    unix_time: int
+    status: int = 0
     pc: str
     input_values: TaskInput
     result: Dict
