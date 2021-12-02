@@ -1,36 +1,21 @@
 from asyncio import Event, gather
 
 from fastapi import APIRouter, WebSocket
-from fastapi.responses import HTMLResponse
-from modules import database, environment
-from orjson import dumps
+from modules.database import status_task, udumps
 
 router = APIRouter()
 
 task_to_ws = dict()
-async def sendMessageToPC(pc):
-    await gather(*[client.send_text(dumps(database.status_scheduler(pc)).decode("utf-8")) for client in task_to_ws[pc]])
+async def broadcastMessage(task_id):
+    if task_id in task_to_ws:
+        await gather(*[client.send_text(udumps(status_task(task_id))) for client in task_to_ws[task_id]])
 
 @router.websocket("")
-async def websocket_endpoint(websocket: WebSocket):
+async def websocket_endpoint_(websocket: WebSocket):
     await websocket.accept()
-    pc = await websocket.receive_text()
-    task_to_ws.setdefault(pc, set())
-    task_to_ws[pc].add(websocket)
-    await websocket.send_text(dumps(database.status_scheduler(pc)).decode("utf-8"))
+    task_id = await websocket.receive_text()
+    task_to_ws.setdefault(task_id, set())
+    task_to_ws[task_id].add(websocket)
+    await websocket.send_text(udumps(status_task(task_id)))
     while True:
         await Event().wait()
-
-@router.get("/test")
-async def get():
-    return HTMLResponse(f"""<script>
-var ws = new WebSocket("{environment.WS_URL}");
-ws.onmessage = function(event) {{
-    document.body.innerHTML = JSON.parse(event.data)["pc"] + "|" + JSON.parse(event.data)["status"]
-}};
-ws.onopen = () => ws.send("eeklo");
-window.onbeforeunload = function() {{
-    ws.onclose = function () {{}};
-    ws.close();
-}};
-</script>""")
