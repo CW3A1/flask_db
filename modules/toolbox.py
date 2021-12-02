@@ -19,6 +19,15 @@ async def task(pc, task_id):
         res = requests.post(status_scheduler["pc_domain"] + "/num_math/taylor_approximation", timeout=3, json=status_task["input_values"]).json()
     if operation == "heateq":
         res = requests.post(status_scheduler["pc_domain"] + "/num_math/heat_equation", timeout=3, json=status_task["input_values"]).json()
+    if operation == "symdiff":
+        res = requests.post(status_scheduler["pc_domain"] + "/sym_math/sym_diff", timeout=3, json=status_task["input_values"]).json()
+    if operation == "symint":
+        res = requests.post(status_scheduler["pc_domain"] + "/sym_math/sym_int", timeout=3, json=status_task["input_values"]).json()
+    if operation == "symlimit":
+        res = requests.post(status_scheduler["pc_domain"] + "/sym_math/sym_limit", timeout=3, json=status_task["input_values"]).json()
+    if operation == "symsolve":
+        res = requests.post(status_scheduler["pc_domain"] + "/sym_math/sym_solver", timeout=3, json=status_task["input_values"]).json()
+    
     database.complete_task(task_id, res)
     database.change_scheduler_status(pc, 0)
 
