@@ -15,6 +15,10 @@ operation_paths = {
     "lint": "/num_math/lagrange_interpolation",
     "taprox": "/num_math/taylor_approximation",
     "heateq": "/num_math/heat_equation",
+    "symdiff": "/sym_math/sym_diff",
+    "symint": "/sym_math/sym_int",
+    "symlimit": "/sym_math/sym_limit",
+    "symsolve": "/sym_math/sym_solver",
 }
 
 async def task(pc, task_id):
