@@ -28,6 +28,7 @@ async def task(pc, task_id):
     try:
         post(status_scheduler_["pc_domain"] + operation_paths[operation], json=options)
         add_log(time_ns(), f"Successfully assigned task {task_id} to {pc}")
+        ensure_future(next_task())
     except:
         free_task(task_id)
         change_scheduler_status(pc, 2)
