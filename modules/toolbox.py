@@ -26,8 +26,9 @@ async def task(pc, task_id):
     operation, options = status_task_["input_values"]["operation"], status_task_["input_values"]["options"]
     options["task_id"] = status_task_["task_id"]
     try:
-        post(status_scheduler_["pc_domain"] + operation_paths[operation], json=options)
+        r = post(status_scheduler_["pc_domain"] + operation_paths[operation], json=options)
         add_log(time_ns(), f"Successfully assigned task {task_id} to {pc}")
+        add_log(time_ns(), r.text)
         ensure_future(next_task())
     except:
         free_task(task_id)
